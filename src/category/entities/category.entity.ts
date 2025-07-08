@@ -11,6 +11,6 @@ export class Category {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  // @OneToMany(() => SubCategory, (category) => category.category)
-  // sub_categories: SubCategory[];
+  @OneToMany(() => SubCategory, (category) => category.id)
+  sub_categories: SubCategory[];
 }
