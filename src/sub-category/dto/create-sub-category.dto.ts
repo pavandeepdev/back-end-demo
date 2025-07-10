@@ -7,5 +7,5 @@ export class CreateSubCategoryDto {
 
   @IsNotEmpty({ message: 'Category ID is required' })
   @IsString({ message: 'Category ID must be a string' })
-  category_id: string;
+  category: string;
 }

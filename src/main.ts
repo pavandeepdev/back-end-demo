@@ -6,7 +6,11 @@ import { CustomExceptionFilter } from './utils/global-filter-error';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+    logger: ['error', 'warn', 'log'],
+    rawBody: true,
+  });
   app.enableCors({
     origin: '*',
   });

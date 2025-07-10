@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { CategoryModule } from './category/category.module';
 import { SubCategoryModule } from './sub-category/sub-category.module';
+import { PartsModule } from './parts/parts.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SubCategoryModule } from './sub-category/sub-category.module';
     }),
     CategoryModule,
     SubCategoryModule,
+    PartsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

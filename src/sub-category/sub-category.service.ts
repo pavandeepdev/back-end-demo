@@ -17,13 +17,18 @@ export class SubCategoryService {
     private readonly category: Repository<Category>,
   ) {}
   async create(createSubCategoryDto: CreateSubCategoryDto) {
-    const { category_id } = createSubCategoryDto;
-    const isExist = await this.category.findOne({
-      where: { id: category_id },
+    const { category, name } = createSubCategoryDto;
+    const isCategoryExist = await this.category.findOne({
+      where: { id: category },
     });
-    console.log('isExist', isExist);
-    if (!isExist) {
+    if (!isCategoryExist) {
       throw new NotFoundException(MESSAGES.CATEGORY_NOT_FOUND);
+    }
+    const isSubCategoryExist = await this.subCategoryRepository.findOne({
+      where: { name },
+    });
+    if (isSubCategoryExist) {
+      throw new NotFoundException(MESSAGES.SUB_CATEGORY_EXISTS);
     }
     const subCategory = this.subCategoryRepository.create(createSubCategoryDto);
     const subCategoryData = await this.subCategoryRepository.save(subCategory);
@@ -36,21 +41,24 @@ export class SubCategoryService {
 
   async findAll() {
     const subCategories = await this.subCategoryRepository.find({
-      relations: ['category_id'],
+      relations: ['category'],
+      select: {
+        id: true,
+        name: true,
+        category: true,
+      },
+      cache: {
+        id: 'sub-category-list',
+        milliseconds: 1000 * 20,
+      },
     });
 
     if (!subCategories) {
       throw new NotFoundException(MESSAGES.SUB_CATEGORY_NOT_FOUND);
     }
 
-    const response = subCategories.map((subCategory) => ({
-      id: subCategory.id,
-      name: subCategory.name,
-      category: subCategory.category_id,
-    }));
-
     return buildSuccessResponse(
-      response,
+      subCategories,
       MESSAGES.SUB_CATEGORY_FETCHED,
       HttpStatus.OK,
     );
