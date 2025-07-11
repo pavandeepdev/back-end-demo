@@ -20,135 +20,178 @@ export class PartsService {
     private readonly subCategoryRepository: Repository<SubCategory>,
   ) {}
   async create(createPartDto: CreatePartDto) {
-    const { category_id, sub_category_id } = createPartDto;
-    const isCategoryValid = await this.categoryRepository.findOne({
-      where: {
-        id: category_id,
-      },
-    });
-    if (!isCategoryValid) {
-      throw new HttpException('Category Id is not valid', HttpStatus.NOT_FOUND);
+    try {
+      const { category_id, sub_category_id } = createPartDto;
+      const isCategoryValid = await this.categoryRepository.findOne({
+        where: {
+          id: category_id,
+        },
+      });
+      if (!isCategoryValid) {
+        throw new HttpException(
+          'Category Id is not valid',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      const isSubCategoryValid = await this.subCategoryRepository.findOne({
+        where: {
+          id: sub_category_id,
+        },
+      });
+      if (!isSubCategoryValid) {
+        throw new HttpException(
+          'Sub Category Id is not valid',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      const part = this.partRepository.create({
+        name: createPartDto.name,
+        category: isCategoryValid,
+        subCategory: isSubCategoryValid,
+      });
+      const response = await this.partRepository.save(part);
+      return buildSuccessResponse(response, MESSAGE.PART_CREATED);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && typeof error.message === 'string'
+          ? error.message
+          : 'An unexpected error occurred';
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
     }
-    const isSubCategoryValid = await this.subCategoryRepository.findOne({
-      where: {
-        id: sub_category_id,
-      },
-    });
-    if (!isSubCategoryValid) {
-      throw new HttpException(
-        'Sub Category Id is not valid',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    const part = this.partRepository.create({
-      name: createPartDto.name,
-      category: isCategoryValid,
-      subCategory: isSubCategoryValid,
-    });
-    const response = await this.partRepository.save(part);
-    return buildSuccessResponse(response, MESSAGE.PART_CREATED);
   }
 
   async findAll() {
-    const parts = await this.partRepository.find({
-      relations: ['category', 'subCategory'],
-      select: {
-        id: true,
-        name: true,
-        category: {
+    try {
+      const parts = await this.partRepository.find({
+        relations: ['category', 'subCategory'],
+        select: {
           id: true,
           name: true,
+          category: {
+            id: true,
+            name: true,
+          },
+          subCategory: {
+            id: true,
+            name: true,
+          },
         },
-        subCategory: {
-          id: true,
-          name: true,
-        },
-      },
-    });
-    return buildSuccessResponse(parts, MESSAGE.PARTS_FETCHED);
+      });
+      return buildSuccessResponse(parts, MESSAGE.PARTS_FETCHED);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && typeof error.message === 'string'
+          ? error.message
+          : 'An unexpected error occurred';
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async findOne(id: string) {
-    const part = await this.partRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ['category', 'subCategory'],
-      select: {
-        id: true,
-        name: true,
-        category: {
+    try {
+      const part = await this.partRepository.findOne({
+        where: {
+          id,
+        },
+        relations: ['category', 'subCategory'],
+        select: {
           id: true,
           name: true,
+          category: {
+            id: true,
+            name: true,
+          },
+          subCategory: {
+            id: true,
+            name: true,
+          },
         },
-        subCategory: {
-          id: true,
-          name: true,
-        },
-      },
-    });
-    if (!part) {
-      throw new HttpException('Part not found', HttpStatus.NOT_FOUND);
+      });
+      if (!part) {
+        throw new HttpException('Part not found', HttpStatus.NOT_FOUND);
+      }
+      return buildSuccessResponse(part, MESSAGE.PARTS_FETCHED);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && typeof error.message === 'string'
+          ? error.message
+          : 'An unexpected error occurred';
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
     }
-    return buildSuccessResponse(part, MESSAGE.PARTS_FETCHED);
   }
 
   async update(id: string, updatePartDto: UpdatePartDto) {
-    const isPartValid = await this.partRepository.findOne({
-      where: {
-        id,
-      },
-    });
-    if (!isPartValid) {
-      throw new HttpException('Part Id is not valid', HttpStatus.NOT_FOUND);
-    }
-    const part = await this.partRepository.update(id, {
-      name: updatePartDto.name,
-      category: {
-        id: updatePartDto.category_id,
-      },
-      subCategory: {
-        id: updatePartDto.sub_category_id,
-      },
-    });
-    if (part.affected === 0) {
-      throw new HttpException('Part not updated', HttpStatus.BAD_REQUEST);
-    }
-    const response = await this.partRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ['category', 'subCategory'],
-      select: {
-        id: true,
-        name: true,
+    try {
+      const isPartValid = await this.partRepository.findOne({
+        where: {
+          id,
+        },
+      });
+      if (!isPartValid) {
+        throw new HttpException('Part Id is not valid', HttpStatus.NOT_FOUND);
+      }
+      const part = await this.partRepository.update(id, {
+        name: updatePartDto.name,
         category: {
-          id: true,
-          name: true,
+          id: updatePartDto.category_id,
         },
         subCategory: {
+          id: updatePartDto.sub_category_id,
+        },
+      });
+      if (part.affected === 0) {
+        throw new HttpException('Part not updated', HttpStatus.BAD_REQUEST);
+      }
+      const response = await this.partRepository.findOne({
+        where: {
+          id,
+        },
+        relations: ['category', 'subCategory'],
+        select: {
           id: true,
           name: true,
+          category: {
+            id: true,
+            name: true,
+          },
+          subCategory: {
+            id: true,
+            name: true,
+          },
         },
-      },
-    });
+      });
 
-    return buildSuccessResponse(response, MESSAGE.PART_UPDATED);
+      return buildSuccessResponse(response, MESSAGE.PART_UPDATED);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && typeof error.message === 'string'
+          ? error.message
+          : 'An unexpected error occurred';
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async remove(id: string) {
-    const isValidPart = await this.partRepository.findOne({
-      where: {
-        id,
-      },
-    });
-    if (!isValidPart) {
-      throw new HttpException('Part Id is not valid', HttpStatus.NOT_FOUND);
+    try {
+      const isValidPart = await this.partRepository.findOne({
+        where: {
+          id,
+        },
+      });
+      if (!isValidPart) {
+        throw new HttpException('Part Id is not valid', HttpStatus.NOT_FOUND);
+      }
+      const part = await this.partRepository.delete(id);
+      if (part.affected === 0) {
+        throw new HttpException('Part not deleted', HttpStatus.BAD_REQUEST);
+      }
+      return buildSuccessResponse([], MESSAGE.PART_DELETED);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && typeof error.message === 'string'
+          ? error.message
+          : 'An unexpected error occurred';
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
     }
-    const part = await this.partRepository.delete(id);
-    if (part.affected === 0) {
-      throw new HttpException('Part not deleted', HttpStatus.BAD_REQUEST);
-    }
-    return buildSuccessResponse([], MESSAGE.PART_DELETED);
   }
 }
